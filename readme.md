@@ -1,6 +1,6 @@
 ---
 title: Lung Segmentation App
-emoji: ":lungs:"
+emoji: 🫁
 colorFrom: blue
 colorTo: green
 sdk: docker
@@ -9,3 +9,4 @@ app_port: 7860
 app_file: app/main.py    # nếu main.py nằm trong thư mục app/
 pinned: false
 ---
+
