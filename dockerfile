@@ -1,23 +1,18 @@
 # Bắt đầu từ image Python 3.9
 FROM python:3.9-slim
 
-# Đặt thư mục làm việc bên trong container
+# Đặt thư mục làm việc, nơi code của bạn sẽ được mount vào
 WORKDIR /code
 
-# Sao chép tệp requirements vào container
+# Sao chép CHỈ tệp requirements vào container
 COPY ./requirements.txt /code/requirements.txt
 
 # Cài đặt các thư viện
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Sao chép toàn bộ code của bạn vào container
-COPY ./app /code/app
-COPY ./static /code/static
-COPY ./models /code/models
-
-# Mở cổng 8000 (phải khớp với app_port trong README.md)
+# Mở cổng 8000
 EXPOSE 8000
 
-# Lệnh để chạy ứng dụng FastAPI của bạn
-# Nó chạy uvicorn, trỏ đến tệp app.main (app/main.py) và đối tượng 'app'
+# Lệnh để chạy ứng dụng của bạn
+# Tệp code của bạn sẽ được HF tự động mount vào /code
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
