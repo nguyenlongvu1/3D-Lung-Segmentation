@@ -1,6 +1,6 @@
 ---
 title: Lung Segmentation App
-emoji: 🫁
+emoji: ":lungs:"
 colorFrom: blue
 colorTo: green
 sdk: docker
