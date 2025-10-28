@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lung Segmentation</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🫁 Lung Segmentation (U-Net)</h1>
+    <p class="subtitle">Upload a chest X-ray image and get the segmented lungs instantly</p>
+
+    <form id="upload-form" enctype="multipart/form-data" class="upload-box">
+      <input type="file" id="file-input" name="file" accept="image/*" hidden>
+      <label for="file-input" class="upload-label">📁 Choose an image</label>
+      <button type="submit" class="segment-btn">🔍 Segment</button>
+    </form>
+
+    <div id="loading" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <p>Processing...</p>
+    </div>
+
+    <div class="result">
+      <div>
+        <h3>Original</h3>
+        <img id="original" src="" alt="Original image" />
+      </div>
+      <div>
+        <h3>Predicted Mask</h3>
+        <img id="mask" src="" alt="Predicted mask" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("upload-form");
+    const original = document.getElementById("original");
+    const mask = document.getElementById("mask");
+    const loading = document.getElementById("loading");
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById("file-input");
+      const file = fileInput.files[0];
+      if (!file) return alert("Please choose an image first!");
+
+      original.src = URL.createObjectURL(file);
+      mask.src = "";
+      loading.style.display = "block";
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          body: formData
+        });
+        const blob = await response.blob();
+        mask.src = URL.createObjectURL(blob);
+      } catch (error) {
+        alert("Error: " + error.message);
+      } finally {
+        loading.style.display = "none";
+      }
+    };
+  </script>
+</body>
+</html>
