@@ -1,9 +1,9 @@
 ---
 title: Lung Segmentation App
 emoji: 🫁
-colorFrom: indigo
-colorTo: blue
+colorFrom: blue
+colorTo: green
 sdk: docker
-app_port: 8000
+app_port: 7860
 pinned: false
 ---
