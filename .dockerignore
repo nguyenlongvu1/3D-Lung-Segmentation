@@ -1,0 +1,15 @@
+.git
+.gitattributes
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+*.swp
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.vscode/
+.idea/

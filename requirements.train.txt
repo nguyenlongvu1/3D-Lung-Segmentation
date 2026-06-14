@@ -1,0 +1,20 @@
+# Extra dependencies for training / evaluation (extends the inference set).
+# Note: for GPU training install a CUDA build of torch separately, e.g.
+#   pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu124
+-r requirements.txt
+
+# MONAI 3D pipeline extras (NIfTI IO, transforms, SwinUNETR, metrics)
+scikit-image==0.24.0
+einops==0.8.0
+tensorboard==2.18.0
+
+# Experiment tracking & config
+wandb==0.18.7
+pyyaml==6.0.2
+
+# Legacy 2D baseline (custom U-Net on PNG slices)
+albumentations==1.4.0
+opencv-python==4.12.0.88
+matplotlib==3.10.6
+scikit-learn==1.5.2
+tqdm==4.67.1

@@ -1,0 +1,37 @@
+# Cấu hình mặc định cho pipeline 3D (MONAI) — Medical Segmentation Decathlon Task06_Lung.
+seed: 42
+
+data:
+  task: Task06_Lung          # tên task MSD, DecathlonDataset sẽ tự tải về root
+  root: data                 # thư mục chứa dữ liệu (ngoài git)
+  val_frac: 0.2              # tỉ lệ tách validation từ tập training của MSD
+  cache_rate: 1.0            # CacheDataset: 1.0 = cache toàn bộ (cần đủ RAM)
+  num_workers: 4
+
+  # Tiền xử lý thể tích
+  spacing: [1.5, 1.5, 2.0]   # resample về spacing (mm) đồng nhất
+  a_min: -1000               # HU windowing cho phổi
+  a_max: 400
+  roi_size: [96, 96, 96]     # kích thước patch 3D
+  num_samples: 4             # số patch lấy ngẫu nhiên mỗi volume khi train
+  batch_size: 2
+
+model:
+  name: monai_unet           # monai_unet | swin_unetr | unet_custom
+  in_channels: 1
+  out_channels: 2            # 0 = nền, 1 = khối u (MSD Task06 gốc)
+
+train:
+  max_epochs: 300
+  lr: 0.0001
+  weight_decay: 0.00001
+  val_interval: 2            # chạy validation mỗi N epoch
+  amp: true                  # mixed precision
+  ckpt_dir: checkpoints
+  sw_batch_size: 4           # batch của sliding-window inference
+  sw_overlap: 0.5
+
+logging:
+  wandb: false               # bật để log lên Weights & Biases
+  project: lung-seg
+  run_name: null

@@ -16,8 +16,8 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 model = load_model(MODEL_PATH, DEVICE)
 
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "web", "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "web", "templates"))
 
 
 @app.get("/", response_class=HTMLResponse)

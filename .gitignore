@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Data & medical imaging volumes (kept out of git — download via ml/data/download.py)
+# Dùng "/data/" có dấu / đầu để CHỈ chặn thư mục data ở gốc repo,
+# tránh nuốt nhầm package mã nguồn ml/data/.
+/data/
+*.nii
+*.nii.gz
+*.dcm
+
+# Training artifacts
+checkpoints/
+results/
+runs/
+wandb/
+*.log
+
+# Exported / large model weights (use Git LFS or release artifacts)
+*.onnx
+*.pt
+*.pth
