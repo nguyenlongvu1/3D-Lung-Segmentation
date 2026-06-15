@@ -25,8 +25,13 @@ def download(cfg) -> None:
         num_workers=cfg.data.num_workers,
     )
     print(f"Số mẫu training: {len(ds)}")
-    sample = ds[0]
-    print(f"Ví dụ mẫu đầu tiên: image={sample['image']} | label={sample['label']}")
+    # Phần in thử mẫu chỉ để kiểm tra — bọc try/except để không làm hỏng kết quả tải.
+    try:
+        sample = ds[0]
+        print(f"Ví dụ mẫu đầu tiên: image={sample['image']} | label={sample['label']}")
+    except Exception as e:  # noqa: BLE001
+        print(f"(Tải xong, nhưng không in được mẫu thử: {e})")
+    print("✅ Tải/giải nén hoàn tất.")
 
 
 def main():

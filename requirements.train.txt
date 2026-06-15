@@ -1,6 +1,7 @@
 # Extra dependencies for training / evaluation (extends the inference set).
-# Note: for GPU training install a CUDA build of torch separately, e.g.
-#   pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu124
+# Dùng kho PyTorch CUDA để torch/torchvision khớp bản GPU (đổi cu126 theo CUDA máy bạn).
+# Nhờ dòng này, "torch==2.8.0" trong requirements.txt sẽ giải về bản +cu126.
+--extra-index-url https://download.pytorch.org/whl/cu126
 -r requirements.txt
 
 # MONAI 3D pipeline extras (NIfTI IO, transforms, SwinUNETR, metrics)
@@ -12,9 +13,13 @@ tensorboard==2.18.0
 wandb==0.18.7
 pyyaml==6.0.2
 
-# Legacy 2D baseline (custom U-Net on PNG slices)
-albumentations==1.4.0
-opencv-python==4.12.0.88
+# Visualization & misc (dùng trong training/visualize, sanity-check)
 matplotlib==3.10.6
 scikit-learn==1.5.2
 tqdm==4.67.1
+
+# --- Baseline 2D CŨ (TÙY CHỌN, cài riêng) ---
+# opencv-python & albumentations đòi numpy>=2 trên Python 3.13, XUNG ĐỘT với MONAI (numpy<2).
+# Pipeline MONAI 3D KHÔNG cần chúng. Chỉ khi muốn chạy lại baseline U-Net 2D thì cài
+# trong MỘT MÔI TRƯỜNG RIÊNG:
+#   pip install opencv-python albumentations

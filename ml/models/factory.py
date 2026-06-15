@@ -25,12 +25,12 @@ def build_model(cfg) -> nn.Module:
         )
 
     if name == "swin_unetr":
-        return SwinUNETR(
-            img_size=tuple(cfg.data.roi_size),
-            in_channels=in_ch,
-            out_channels=out_ch,
-            feature_size=48,
-        )
+        kwargs = dict(in_channels=in_ch, out_channels=out_ch, feature_size=48)
+        # MONAI >=1.5 bỏ tham số img_size; MONAI <=1.4 vẫn cần. Thử bản mới trước.
+        try:
+            return SwinUNETR(**kwargs)
+        except TypeError:
+            return SwinUNETR(img_size=tuple(cfg.data.roi_size), **kwargs)
 
     if name == "unet_custom":
         # Baseline 2D tự viết (giữ để đối chứng). Lưu ý: chỉ chạy với pipeline 2D-slice.
