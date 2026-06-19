@@ -6,7 +6,8 @@ data:
   root: data                 # thư mục chứa dữ liệu (ngoài git)
   val_frac: 0.2              # tỉ lệ tách validation từ tập training của MSD
   cache_rate: 1.0            # CacheDataset: 1.0 = cache toàn bộ (cần đủ RAM)
-  num_workers: 4
+  num_workers: 4             # worker để cache/tiền xử lý ban đầu
+  loader_workers: 0          # worker của DataLoader (để 0 trên Windows tránh nhân bản cache)
 
   # Tiền xử lý thể tích
   spacing: [1.5, 1.5, 2.0]   # resample về spacing (mm) đồng nhất

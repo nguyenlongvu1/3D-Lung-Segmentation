@@ -40,11 +40,16 @@ def get_datasets(cfg, download: bool = True):
 def get_loaders(cfg, download: bool = True):
     train_ds, val_ds = get_datasets(cfg, download=download)
 
+    # Trên Windows, num_workers>0 với CacheDataset khiến mỗi worker NHÂN BẢN cache
+    # (spawn -> pickle) -> dễ tràn RAM. Mặc định 0 (an toàn); Linux có thể tăng
+    # qua cfg.data.loader_workers. Cache đã nằm sẵn trong RAM nên 0 vẫn nhanh.
+    loader_workers = int(getattr(cfg.data, "loader_workers", 0))
+
     train_loader = DataLoader(
         train_ds,
         batch_size=cfg.data.batch_size,
         shuffle=True,
-        num_workers=cfg.data.num_workers,
+        num_workers=loader_workers,
         collate_fn=list_data_collate,
         pin_memory=True,
     )
@@ -52,7 +57,7 @@ def get_loaders(cfg, download: bool = True):
         val_ds,
         batch_size=1,
         shuffle=False,
-        num_workers=cfg.data.num_workers,
+        num_workers=loader_workers,
         pin_memory=True,
     )
     return train_loader, val_loader
