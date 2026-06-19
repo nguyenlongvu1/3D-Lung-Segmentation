@@ -49,7 +49,7 @@ def train(cfg):
     amp = bool(cfg.train.amp) and device.type == "cuda"
     print(f"Device: {device} | Model: {cfg.model.name} | AMP: {amp}")
 
-    train_loader, val_loader = get_loaders(cfg)
+    train_loader, val_loader = get_loaders(cfg)  # tự chia train/val/test theo seed
     model = build_model(cfg).to(device)
     print(f"Số tham số train được: {count_parameters(model):,}")
 

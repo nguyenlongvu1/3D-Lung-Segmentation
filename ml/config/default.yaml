@@ -4,7 +4,8 @@ seed: 42
 data:
   task: Task06_Lung          # tên task MSD, DecathlonDataset sẽ tự tải về root
   root: data                 # thư mục chứa dữ liệu (ngoài git)
-  val_frac: 0.2              # tỉ lệ tách validation từ tập training của MSD
+  val_frac: 0.15             # tỉ lệ validation (early stopping)
+  test_frac: 0.15            # tỉ lệ test (khóa lại, chỉ báo cáo cuối)
   cache_rate: 1.0            # CacheDataset: 1.0 = cache toàn bộ (cần đủ RAM)
   num_workers: 4             # worker để cache/tiền xử lý ban đầu
   loader_workers: 0          # worker của DataLoader (để 0 trên Windows tránh nhân bản cache)

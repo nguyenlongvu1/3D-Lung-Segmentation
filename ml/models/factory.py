@@ -25,7 +25,11 @@ def build_model(cfg) -> nn.Module:
         )
 
     if name == "swin_unetr":
-        kwargs = dict(in_channels=in_ch, out_channels=out_ch, feature_size=48)
+        # use_checkpoint=True: gradient checkpointing -> tiết kiệm VRAM (cần cho GPU 8GB),
+        # đổi lại train chậm hơn chút.
+        kwargs = dict(
+            in_channels=in_ch, out_channels=out_ch, feature_size=48, use_checkpoint=True
+        )
         # MONAI >=1.5 bỏ tham số img_size; MONAI <=1.4 vẫn cần. Thử bản mới trước.
         try:
             return SwinUNETR(**kwargs)
