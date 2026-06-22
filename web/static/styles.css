@@ -66,18 +66,54 @@ h1 {
   background-color: #3a8f3d;
 }
 
-.result {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 30px;
-  margin-top: 40px;
+.file-name {
+  font-size: 13px;
+  color: #555;
+  word-break: break-all;
 }
 
-.result img {
-  max-width: 280px;
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+#viewer {
+  width: 384px;
+  max-width: 90%;
+  background: #000;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  image-rendering: pixelated;   /* lát cắt nhỏ -> phóng to vẫn nét khối */
+}
+
+#slider {
+  width: 384px;
+  max-width: 90%;
+}
+
+.stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.badge {
+  background: #eef3f9;
+  border: 1px solid #d4e0ee;
+  color: #1259a6;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.hint {
+  color: #777;
+  font-size: 13px;
+  margin: 0;
 }
 
 .loading {

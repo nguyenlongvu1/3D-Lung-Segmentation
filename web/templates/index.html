@@ -1,66 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Lung Segmentation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lung Tumor Segmentation 3D</title>
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
   <div class="container">
-    <h1>🫁 Lung Segmentation (U-Net)</h1>
-    <p class="subtitle">Upload a chest X-ray image and get the segmented lungs instantly</p>
+    <h1>🫁 Lung Tumor Segmentation (3D CT)</h1>
+    <p class="subtitle">Upload một khối CT (.nii / .nii.gz) → mô hình khoanh vùng khối u và đo thể tích</p>
 
-    <form id="upload-form" enctype="multipart/form-data" class="upload-box">
-      <input type="file" id="file-input" name="file" accept="image/*" hidden>
-      <label for="file-input" class="upload-label">📁 Choose an image</label>
-      <button type="submit" class="segment-btn">🔍 Segment</button>
+    <form id="upload-form" class="upload-box">
+      <input type="file" id="file-input" name="file" accept=".nii,.nii.gz" hidden>
+      <label for="file-input" class="upload-label">📁 Chọn file CT (.nii.gz)</label>
+      <span id="file-name" class="file-name"></span>
+      <button type="submit" class="segment-btn">🔍 Phân đoạn</button>
     </form>
 
     <div id="loading" class="loading" style="display:none;">
       <div class="spinner"></div>
-      <p>Processing...</p>
+      <p>Đang chạy inference 3D... (có thể mất vài giây)</p>
     </div>
 
-    <div class="result">
-      <div>
-        <h3>Original</h3>
-        <img id="original" src="" alt="Original image" />
+    <div id="result" class="result" style="display:none;">
+      <div class="stats">
+        <span class="badge">Thể tích khối u: <b id="tumor-ml">–</b> ml</span>
+        <span class="badge">Lát cắt: <b id="slice-idx">–</b> / <b id="slice-max">–</b></span>
       </div>
-      <div>
-        <h3>Predicted Mask</h3>
-        <img id="mask" src="" alt="Predicted mask" />
-      </div>
+      <img id="viewer" src="" alt="Lát cắt CT + overlay" />
+      <input type="range" id="slider" min="0" max="0" value="0" />
+      <p class="hint">Kéo thanh trượt để xem các lát cắt axial. Vùng đỏ = khối u dự đoán.</p>
     </div>
   </div>
 
   <script>
     const form = document.getElementById("upload-form");
-    const original = document.getElementById("original");
-    const mask = document.getElementById("mask");
+    const fileInput = document.getElementById("file-input");
+    const fileName = document.getElementById("file-name");
     const loading = document.getElementById("loading");
+    const result = document.getElementById("result");
+    const viewer = document.getElementById("viewer");
+    const slider = document.getElementById("slider");
+    const sliceIdx = document.getElementById("slice-idx");
+    const sliceMax = document.getElementById("slice-max");
+    const tumorMl = document.getElementById("tumor-ml");
+
+    fileInput.onchange = () => {
+      fileName.textContent = fileInput.files[0] ? fileInput.files[0].name : "";
+    };
+
+    function showSlice(z) {
+      viewer.src = `/slice/${z}?t=${Date.now()}`;  // tránh cache
+      sliceIdx.textContent = z;
+    }
+
+    slider.oninput = () => showSlice(slider.value);
 
     form.onsubmit = async (e) => {
       e.preventDefault();
-      const fileInput = document.getElementById("file-input");
       const file = fileInput.files[0];
-      if (!file) return alert("Please choose an image first!");
+      if (!file) return alert("Hãy chọn file CT trước!");
 
-      original.src = URL.createObjectURL(file);
-      mask.src = "";
       loading.style.display = "block";
+      result.style.display = "none";
 
       const formData = new FormData();
       formData.append("file", file);
-
       try {
-        const response = await fetch("/predict", {
-          method: "POST",
-          body: formData
-        });
-        const blob = await response.blob();
-        mask.src = URL.createObjectURL(blob);
+        const res = await fetch("/predict", { method: "POST", body: formData });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: res.statusText }));
+          throw new Error(err.detail || "Lỗi không xác định");
+        }
+        const data = await res.json();
+        slider.max = data.num_slices - 1;
+        slider.value = data.default_slice;
+        sliceMax.textContent = data.num_slices - 1;
+        tumorMl.textContent = data.tumor_ml;
+        showSlice(data.default_slice);
+        result.style.display = "block";
       } catch (error) {
-        alert("Error: " + error.message);
+        alert("Lỗi: " + error.message);
       } finally {
         loading.style.display = "none";
       }

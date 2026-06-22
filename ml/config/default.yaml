@@ -17,6 +17,7 @@ data:
   roi_size: [96, 96, 96]     # kích thước patch 3D
   num_samples: 4             # số patch lấy ngẫu nhiên mỗi volume khi train
   batch_size: 2
+  strong_aug: false          # bật aug mạnh (noise/smooth/gamma) — đã thử, hại trên data nhỏ
 
 model:
   name: monai_unet           # monai_unet | swin_unetr | unet_custom
@@ -25,9 +26,14 @@ model:
 
 train:
   max_epochs: 300
+  loss: dicefocal            # dicefocal | tversky | dicece (dicefocal đã chứng minh hoạt động)
   lr: 0.0001
+  use_scheduler: false       # bật LR scheduler (warmup+cosine) — đã thử, hại trên task này
+  warmup_epochs: 5           # warm-up (chỉ dùng khi use_scheduler=true)
   weight_decay: 0.00001
   val_interval: 2            # chạy validation mỗi N epoch
+  early_stop_patience: 15    # dừng nếu val-dice không cải thiện sau N lần validate
+  early_stop_min_dice: 0.05  # chỉ bật early stopping sau khi dice vượt ngưỡng (thoát collapse)
   amp: true                  # mixed precision
   ckpt_dir: checkpoints
   sw_batch_size: 4           # batch của sliding-window inference

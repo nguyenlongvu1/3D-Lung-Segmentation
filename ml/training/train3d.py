@@ -16,14 +16,28 @@ import time
 import torch
 from torch.amp import autocast, GradScaler
 
-from monai.losses import DiceCELoss
+from monai.losses import DiceCELoss, DiceFocalLoss, TverskyLoss
 from monai.inferers import sliding_window_inference
+from monai.optimizers import WarmupCosineSchedule
 from monai.utils import set_determinism
 
 from ml.config import load_config, save_config
 from ml.data.datamodule import get_loaders
 from ml.models.factory import build_model, count_parameters
 from ml.training.metrics3d import SegMetrics
+
+
+def build_loss(name: str):
+    """Chọn loss theo tên. Tversky (beta>alpha) phạt nặng bỏ sót u -> chống collapse."""
+    name = (name or "tversky").lower()
+    if name == "tversky":
+        # alpha=FP, beta=FN. beta cao -> phạt nặng việc BỎ SÓT khối u.
+        return TverskyLoss(to_onehot_y=True, softmax=True, alpha=0.3, beta=0.7)
+    if name == "dicefocal":
+        return DiceFocalLoss(to_onehot_y=True, softmax=True)
+    if name == "dicece":
+        return DiceCELoss(to_onehot_y=True, softmax=True)
+    raise ValueError(f"loss không hỗ trợ: {name} (chọn: tversky/dicefocal/dicece)")
 
 
 @torch.no_grad()
@@ -53,11 +67,22 @@ def train(cfg):
     model = build_model(cfg).to(device)
     print(f"Số tham số train được: {count_parameters(model):,}")
 
-    # Loss: kết hợp Dice + CrossEntropy. to_onehot_y/softmax xử lý label [B,1,..] & logits.
-    loss_fn = DiceCELoss(to_onehot_y=True, softmax=True)
+    # Loss chọn qua config (mặc định Tversky chống foreground collapse trên u nhỏ).
+    loss_name = getattr(cfg.train, "loss", "tversky")
+    loss_fn = build_loss(loss_name)
+    print(f"Loss: {loss_name}")
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=cfg.train.lr, weight_decay=cfg.train.weight_decay
     )
+    # LR scheduler (TÙY CHỌN: train.use_scheduler=true). Mặc định TẮT vì cosine decay
+    # làm giảm LR đúng lúc model cần thoát collapse -> hại trên task này. Giữ để thử sau.
+    use_scheduler = bool(getattr(cfg.train, "use_scheduler", False))
+    scheduler = None
+    if use_scheduler:
+        warmup = int(getattr(cfg.train, "warmup_epochs", 5))
+        scheduler = WarmupCosineSchedule(
+            optimizer, warmup_steps=warmup, t_total=cfg.train.max_epochs
+        )
     scaler = GradScaler("cuda", enabled=amp)
     metrics = SegMetrics(num_classes=cfg.model.out_channels)
 
@@ -79,6 +104,9 @@ def train(cfg):
 
     best_dice = -1.0
     patience = int(getattr(cfg.train, "early_stop_patience", 15))  # đơn vị: số lần validate
+    # Chỉ tính early stopping SAU KHI model thoát collapse (best vượt ngưỡng này).
+    # Tránh dừng oan trong "thung lũng" dice≈0 trước lúc hồi phục.
+    min_dice_es = float(getattr(cfg.train, "early_stop_min_dice", 0.05))
     counter = 0
 
     for epoch in range(cfg.train.max_epochs):
@@ -114,16 +142,21 @@ def train(cfg):
                 torch.save(model.state_dict(), ckpt_path)
                 counter = 0
                 print(f"  ↑ best dice {best_dice:.4f} -> đã lưu {ckpt_path}")
-            else:
+            elif best_dice >= min_dice_es:
+                # Đã thoát collapse -> đếm patience bình thường.
                 counter += 1
                 if counter >= patience:
                     print(f"Early stopping: không cải thiện sau {patience} lần validate.")
                     break
+            # Nếu best_dice còn < min_dice_es (đang collapse): KHÔNG đếm, cứ train tiếp.
         else:
             print(f"Epoch {epoch+1}/{cfg.train.max_epochs} | loss {epoch_loss:.4f} | {time.time()-t0:.0f}s")
 
+        log["lr"] = optimizer.param_groups[0]["lr"]
         if use_wandb:
             wandb.log(log)
+        if scheduler is not None:
+            scheduler.step()  # cập nhật LR cuối mỗi epoch
 
     print(f"\nXong. Best val mean-dice: {best_dice:.4f} | checkpoint: {ckpt_path}")
     if use_wandb:
@@ -135,6 +168,7 @@ def main():
     p.add_argument("--config", default=None)
     p.add_argument("--model", default=None, help="ghi đè model.name (monai_unet/swin_unetr)")
     p.add_argument("--epochs", type=int, default=None, help="ghi đè max_epochs (smoke test)")
+    p.add_argument("--batch-size", type=int, default=None, help="ghi đè batch_size (giảm cho model nặng)")
     args = p.parse_args()
 
     cfg = load_config(args.config)
@@ -142,6 +176,8 @@ def main():
         cfg.model.name = args.model
     if args.epochs:
         cfg.train.max_epochs = args.epochs
+    if args.batch_size:
+        cfg.data.batch_size = args.batch_size
     train(cfg)
 
 

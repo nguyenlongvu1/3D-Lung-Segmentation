@@ -43,5 +43,3 @@ Example build commands:
 2. Pipeline MONAI: transforms 3D, kiến trúc hiện đại (UNet 3D, SwinUNETR).
 3. Đánh giá đa chỉ số per-class (Dice, Hausdorff95) + benchmark + tracking (W&B).
 4. Demo viewer thể tích (kéo lát cắt CT + overlay mask multi-class).
-
-Baseline U-Net 2D hiện tại được giữ làm mốc đối chứng.
