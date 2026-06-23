@@ -3,7 +3,6 @@
 Hỗ trợ:
   - monai_unet : U-Net 3D của MONAI (baseline mạnh, ổn định).
   - swin_unetr : SwinUNETR — transformer encoder (điểm nhấn kiến trúc hiện đại).
-  - unet_custom: U-Net tự viết ban đầu (baseline 2D, để đối chứng).
 """
 import torch.nn as nn
 from monai.networks.nets import UNet, SwinUNETR
@@ -36,14 +35,8 @@ def build_model(cfg) -> nn.Module:
         except TypeError:
             return SwinUNETR(img_size=tuple(cfg.data.roi_size), **kwargs)
 
-    if name == "unet_custom":
-        # Baseline 2D tự viết (giữ để đối chứng). Lưu ý: chỉ chạy với pipeline 2D-slice.
-        from ml.training.model import UNet as CustomUNet
-
-        return CustomUNet(in_channels=in_ch, out_channels=out_ch)
-
     raise ValueError(
-        f"Model không hỗ trợ: '{name}'. Chọn: monai_unet | swin_unetr | unet_custom"
+        f"Model không hỗ trợ: '{name}'. Chọn: monai_unet | swin_unetr"
     )
 
 

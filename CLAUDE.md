@@ -55,16 +55,14 @@ ml/
     datamodule.py          # split train/val/test 3 phần (seed) + get_loaders/get_test_loader
     check.py               # sanity-check pipeline -> results/sanity_check.png
   models/
-    factory.py             # build_model: monai_unet | swin_unetr | unet_custom + count_parameters
+    factory.py             # build_model: monai_unet | swin_unetr + count_parameters
   training/
     train3d.py             # TRAIN LOOP CHÍNH (DiceFocalLoss, AMP, sliding-window, early stop)
     evaluate3d.py          # đánh giá trên TEST -> ghi results/benchmark.csv
     metrics3d.py           # SegMetrics: Dice + HD95 per-class (include_background=False)
-    *.py (cũ)              # baseline 2D U-Net trên PNG (datasets/model/train/evaluate...) - giữ đối chứng
 api/
   inference.py             # LungTumorInference: load model + tiền xử lý + sliding-window + thể tích u
   main.py                  # FastAPI: / , POST /predict (.nii.gz), GET /slice/{z} (PNG overlay)
-  model.py, utils.py       # CŨ (2D), không còn dùng
 web/templates/index.html   # viewer: upload + slider lát cắt + overlay + badge thể tích
 web/static/styles.css
 docker/Dockerfile.app, Dockerfile.train ; Dockerfile (root, app)
