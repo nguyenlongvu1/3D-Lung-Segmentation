@@ -15,6 +15,7 @@ import time
 
 import torch
 from torch.amp import autocast, GradScaler
+from tqdm import tqdm
 
 from monai.losses import DiceCELoss, DiceFocalLoss, TverskyLoss
 from monai.inferers import sliding_window_inference
@@ -113,7 +114,8 @@ def train(cfg):
         model.train()
         epoch_loss = 0.0
         t0 = time.time()
-        for batch in train_loader:
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{cfg.train.max_epochs}", leave=False)
+        for batch in pbar:
             images = batch["image"].to(device)
             labels = batch["label"].to(device)
             optimizer.zero_grad(set_to_none=True)
@@ -124,6 +126,7 @@ def train(cfg):
             scaler.step(optimizer)
             scaler.update()
             epoch_loss += loss.item()
+            pbar.set_postfix(loss=f"{loss.item():.4f}")
         epoch_loss /= max(1, len(train_loader))
         log = {"epoch": epoch + 1, "train_loss": epoch_loss}
 
@@ -169,6 +172,7 @@ def main():
     p.add_argument("--model", default=None, help="ghi đè model.name (monai_unet/swin_unetr)")
     p.add_argument("--epochs", type=int, default=None, help="ghi đè max_epochs (smoke test)")
     p.add_argument("--batch-size", type=int, default=None, help="ghi đè batch_size (giảm cho model nặng)")
+    p.add_argument("--num-samples", type=int, default=None, help="ghi đè num_samples (số patch/volume — giảm để tiết kiệm VRAM)")
     args = p.parse_args()
 
     cfg = load_config(args.config)
@@ -178,6 +182,8 @@ def main():
         cfg.train.max_epochs = args.epochs
     if args.batch_size:
         cfg.data.batch_size = args.batch_size
+    if args.num_samples:
+        cfg.data.num_samples = args.num_samples
     train(cfg)
 
 
