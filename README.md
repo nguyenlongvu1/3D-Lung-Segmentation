@@ -136,8 +136,11 @@ evaluation on a locked test set, and a visual demo.
 4. **Windows + CacheDataset.** `DataLoader(num_workers>0)` duplicates the cache → RAM blow-up. → set
    `loader_workers=0` (workers are only used for the initial caching step).
 
-5. **Accuracy vs deployability.** SwinUNETR is stronger but heavier on VRAM, slower, harder to deploy. The benchmark
-   keeps `params`/`infer_time` columns to **reason about the trade-off** — the production mindset.
+5. **Accuracy vs deployability — a measured trade-off.** I tried **SwinUNETR (62M params, ~13× the UNet)**.
+   On the RTX 4060 8GB it **saturated VRAM (~7.9 / 8.2 GB)** and took **~26 min/epoch** even with gradient
+   checkpointing — training it to convergence would take roughly a full day, impractical on this hardware.
+   The lightweight UNet (4.8M params, 0.45 s/vol, comfortable VRAM headroom) was the pragmatic pick.
+   Knowing **when *not* to reach for the heavier model** is itself the production mindset.
 
 ---
 
