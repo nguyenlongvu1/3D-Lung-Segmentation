@@ -13,13 +13,10 @@ tensorboard==2.18.0
 wandb==0.18.7
 pyyaml==6.0.2
 
-# Visualization & misc (dùng trong training/visualize, sanity-check)
+# Visualization & misc (sanity-check, plots)
 matplotlib==3.10.6
 scikit-learn==1.5.2
 tqdm==4.67.1
 
-# --- Baseline 2D CŨ (TÙY CHỌN, cài riêng) ---
-# opencv-python & albumentations đòi numpy>=2 trên Python 3.13, XUNG ĐỘT với MONAI (numpy<2).
-# Pipeline MONAI 3D KHÔNG cần chúng. Chỉ khi muốn chạy lại baseline U-Net 2D thì cài
-# trong MỘT MÔI TRƯỜNG RIÊNG:
-#   pip install opencv-python albumentations
+# Testing
+pytest==8.3.4
