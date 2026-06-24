@@ -144,6 +144,27 @@ evaluation on a locked test set, and a visual demo.
 
 ---
 
+## ⚡ Deployment & inference latency
+
+The trained UNet is exported to **ONNX** (`python -m ml.deploy.onnx_export`) and verified: the ONNX
+model reproduces the PyTorch segmentation **exactly (100% voxel-label agreement)**. Latency per
+96³ patch (mean of 30 runs, RTX 4060 8GB):
+
+| Backend | ms / patch | |
+|---|:---:|---|
+| **PyTorch (CUDA)** | **~7** | ~18× faster than CPU |
+| PyTorch (CPU) | ~130 | |
+| ONNX Runtime (CPU) | ~133 | ≈ PyTorch CPU — no free CPU speedup |
+
+**Honest takeaways:**
+- This 3D model **strongly prefers a GPU** (~18×). On CPU a full volume (sliding-window) would be
+  ~18× the 0.45 s/vol → a few seconds — still fine for a non-realtime clinical tool.
+- ONNX Runtime gave **no CPU speedup** here (PyTorch CPU already uses optimized MKL kernels). The
+  value of the ONNX export is **portability** (run without a PyTorch/CUDA install) and a **path to
+  TensorRT** for real GPU acceleration — left as future work.
+
+---
+
 ## ⚠️ Limitations 
 
 - **Small dataset:** 45 training cases and **a single 9-case test measurement** → a **noisy** number. K-fold
@@ -186,6 +207,16 @@ python -m ml.training.train3d --model swin_unetr --batch-size 1
 python -m ml.training.evaluate3d --model swin_unetr
 ```
 
+**Or run the demo with one command (Docker):**
+
+```bash
+docker compose up --build        # builds the image + serves on http://localhost:7860
+```
+
+The compose file mounts `./checkpoints` into the container (so the model isn't baked into the
+image) and runs **CPU inference** — portable, no CUDA needed. Requires a trained
+`checkpoints/best_monai_unet.pth`.
+
 > All hyperparameters live in `ml/config/default.yaml` (loss, spacing, HU window, roi_size, early stopping…).
 
 ---
@@ -213,9 +244,10 @@ requirements.txt           # inference   ·   requirements.train.txt  # + traini
 
 ## 🛣️ Roadmap
 
+- [x] **ONNX export** + latency benchmark (PyTorch vs ONNX Runtime).
+- [x] **pytest** suite (GPU-free unit tests).
 - [ ] **K-fold cross-validation** → a robust number (e.g. `0.42 ± 0.05`) instead of one 9-case measurement.
-- [ ] **SwinUNETR** comparison → a two-row benchmark (accuracy vs deployability).
-- [ ] **MLOps:** ONNX export · docker-compose · pytest · GitHub Actions CI.
+- [ ] **MLOps:** docker-compose · GitHub Actions CI · TensorRT (real GPU speedup).
 - [ ] **Deploy** the demo online (Hugging Face Space).
 
 ---

@@ -1,0 +1,4 @@
+backend,ms_per_patch,roi,iters
+PyTorch (CUDA),6.94,96x96x96,30
+PyTorch (CPU),129.66,96x96x96,30
+ONNX Runtime (CPU),133.0,96x96x96,30

@@ -1,0 +1,20 @@
+# Chạy demo web bằng MỘT lệnh:  docker compose up --build
+#
+# - Build image từ root Dockerfile (python:3.11-slim + requirements.txt -> uvicorn).
+# - KHÔNG nhồi model vào image: checkpoint được mount lúc chạy từ ./checkpoints của host
+#   (file .pth nặng & nằm ngoài git). Phải train trước để có checkpoints/best_monai_unet.pth.
+# - Inference chạy CPU trong container (portable). Demo non-realtime nên vài giây/ca là ổn.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lung-seg-app
+    container_name: lung-seg-app
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./checkpoints:/code/checkpoints:ro   # cung cấp model lúc chạy (không bake vào image)
+    environment:
+      - CKPT_PATH=/code/checkpoints/best_monai_unet.pth
+    restart: unless-stopped

@@ -1,15 +1,39 @@
+# VCS / editor / OS
 .git
 .gitattributes
+.gitignore
+.vscode/
+.idea/
+.claude/
+
+# Python
 __pycache__/
 *.py[cod]
-*.log
-*.tmp
-*.swp
-.venv/
-venv/
-env/
 .pytest_cache/
 .mypy_cache/
 .ipynb_checkpoints/
-.vscode/
-.idea/
+*.log
+*.tmp
+*.swp
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Dữ liệu & artifact NẶNG — không cần trong image phục vụ
+data/
+checkpoints/        # model được mount lúc chạy qua volume (xem docker-compose.yml)
+results/
+wandb/
+runs/
+*.nii
+*.nii.gz
+*.dcm
+*.onnx
+*.pth
+
+# Chỉ dùng khi phát triển — không cần khi serve
+tests/
+docker/
+assets/
