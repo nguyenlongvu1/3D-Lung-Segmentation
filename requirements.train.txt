@@ -6,6 +6,7 @@
 
 # MONAI 3D pipeline extras (NIfTI IO, transforms, SwinUNETR, metrics)
 scikit-image==0.24.0
+scipy==1.17.1            # MONAI cần cho HD95 / surface distance
 einops==0.8.0
 tensorboard==2.18.0
 

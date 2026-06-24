@@ -24,7 +24,8 @@ jobs:
         run: pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
 
       - name: Install project + test deps
-        run: pip install -r requirements.txt pytest pyyaml
+        # scipy: MONAI cần cho HD95 (test_metrics) — không nằm trong requirements.txt (inference)
+        run: pip install -r requirements.txt pytest pyyaml scipy
 
       - name: Run tests
         run: pytest -q
