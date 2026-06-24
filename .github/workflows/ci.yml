@@ -1,0 +1,30 @@
+name: CI
+
+# Chạy test mỗi lần push / mở PR vào main. Runner của GitHub không có GPU,
+# nên cài PyTorch bản CPU; test đã được thiết kế GPU-free để pass ở đây.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install PyTorch (CPU build)
+        run: pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install project + test deps
+        run: pip install -r requirements.txt pytest pyyaml
+
+      - name: Run tests
+        run: pytest -q

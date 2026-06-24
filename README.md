@@ -1,13 +1,3 @@
----
-title: Lung Tumor Segmentation 3D
-emoji: 🫁
-colorFrom: blue
-colorTo: green
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # 🫁 Lung Tumor Segmentation 3D (CT · MONAI)
 
 > Segmentation of **lung tumors on 3D CT scans** (Medical Segmentation Decathlon — Task06_Lung)
@@ -15,6 +5,7 @@ pinned: false
 > **quantify tumor volume (ml)**. All training & evaluation run on a **single local RTX 4060 8GB GPU**.
 
 <p>
+<img alt="CI" src="https://github.com/nguyenlongvu1/3D-Lung-Segmentation/actions/workflows/ci.yml/badge.svg">
 <img alt="Python" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white">
 <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.8%2Bcu126-EE4C2C?logo=pytorch&logoColor=white">
 <img alt="MONAI" src="https://img.shields.io/badge/MONAI-1.5.2-00A3E0">
