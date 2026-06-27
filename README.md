@@ -173,7 +173,7 @@ model reproduces the PyTorch segmentation **exactly (100% voxel-label agreement)
 
 ```bash
 # 1) PyTorch with CUDA (install first, separately)
-pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu126
+pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
 
 # 2a) Demo / inference only:
 pip install -r requirements.txt
@@ -227,7 +227,7 @@ api/
   inference.py             # LungTumorInference: load model + preprocess + sliding-window + tumor volume
   main.py                  # FastAPI: /predict (.nii.gz) · /slice/{z} (PNG overlay)
 web/                       # viewer: upload + slice slider + overlay + volume badge
-docker/                    # Dockerfile.app · Dockerfile.train
+Dockerfile · docker-compose.yml   # app image + one-command demo
 requirements.txt           # inference   ·   requirements.train.txt  # + training
 ```
 

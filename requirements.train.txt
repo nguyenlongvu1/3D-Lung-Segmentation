@@ -1,14 +1,12 @@
 # Extra dependencies for training / evaluation (extends the inference set).
-# Dùng kho PyTorch CUDA để torch/torchvision khớp bản GPU (đổi cu126 theo CUDA máy bạn).
+# Dùng kho PyTorch CUDA để torch khớp bản GPU (đổi cu126 theo CUDA máy bạn).
 # Nhờ dòng này, "torch==2.8.0" trong requirements.txt sẽ giải về bản +cu126.
 --extra-index-url https://download.pytorch.org/whl/cu126
 -r requirements.txt
 
-# MONAI 3D pipeline extras (NIfTI IO, transforms, SwinUNETR, metrics)
-scikit-image==0.24.0
+# MONAI 3D pipeline extras (transforms, SwinUNETR, metrics)
 scipy==1.17.1            # MONAI cần cho HD95 / surface distance
-einops==0.8.0
-tensorboard==2.18.0
+einops==0.8.0            # MONAI cần khi build SwinUNETR
 
 # Experiment tracking & config
 wandb==0.18.7
@@ -16,7 +14,6 @@ pyyaml==6.0.2
 
 # Visualization & misc (sanity-check, plots)
 matplotlib==3.10.6
-scikit-learn==1.5.2
 tqdm==4.67.1
 
 # Testing

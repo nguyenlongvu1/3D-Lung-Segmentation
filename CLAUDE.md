@@ -65,9 +65,9 @@ api/
   main.py                  # FastAPI: / , POST /predict (.nii.gz), GET /slice/{z} (PNG overlay)
 web/templates/index.html   # viewer: upload + slider lát cắt + overlay + badge thể tích
 web/static/styles.css
-docker/Dockerfile.app, Dockerfile.train ; Dockerfile (root, app)
+Dockerfile (root, app) ; docker-compose.yml (demo 1 lệnh, mount checkpoint)
 requirements.txt           # inference (fastapi, torch, monai, nibabel...)
-requirements.train.txt     # +train (wandb, tensorboard, scikit-image...) + extra-index cu126
+requirements.train.txt     # +train (wandb, matplotlib, scipy, onnx...) + extra-index cu126
 data/                      # gitignored. data/Task06_Lung/{imagesTr,labelsTr,imagesTs}/*.nii.gz
 checkpoints/, results/, wandb/  # gitignored
 ```
@@ -78,7 +78,7 @@ checkpoints/, results/, wandb/  # gitignored
 
 ```bash
 # 1. torch bản CUDA (PHẢI cài riêng, không để requirements kéo bản CPU)
-pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu126
+pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
 # 2. phần còn lại
 pip install -r requirements.train.txt
 # 3. kiểm tra
@@ -92,7 +92,7 @@ python -c "import torch, monai, numpy; print(torch.__version__, torch.cuda.is_av
 - MONAI **1.4.0 cấm numpy<2.0** → KHÔNG hợp Python 3.13. Phải **MONAI 1.5.2** (hỗ trợ numpy 2).
 - `opencv-python`/`albumentations` (bản py3.13) đòi numpy≥2 nhưng mâu thuẫn cấu hình cũ →
   **tách khỏi requirements.train.txt** (chỉ baseline 2D cần, cài riêng nếu muốn).
-- `--extra-index-url .../cu126` đặt đầu requirements.train.txt để torch/torchvision khớp bản GPU.
+- `--extra-index-url .../cu126` đặt đầu requirements.train.txt để torch khớp bản GPU.
 
 ---
 

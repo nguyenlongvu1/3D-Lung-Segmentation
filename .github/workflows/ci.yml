@@ -21,7 +21,7 @@ jobs:
           cache: pip
 
       - name: Install PyTorch (CPU build)
-        run: pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
+        run: pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
 
       - name: Install project + test deps
         # scipy: MONAI cần cho HD95 (test_metrics) — không nằm trong requirements.txt (inference)
