@@ -19,6 +19,9 @@ from PIL import Image
 
 app = FastAPI(title="Lung Tumor Segmentation 3D")
 
+# Giới hạn kích thước upload để tránh cạn kiệt bộ nhớ (DoS). Có thể chỉnh qua env.
+MAX_UPLOAD_BYTES = int(os.environ.get("MAX_UPLOAD_MB", "500")) * 1024 * 1024
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CKPT_PATH = os.environ.get(
     "CKPT_PATH", os.path.join(BASE_DIR, "checkpoints", "best_monai_unet.pth")
@@ -66,14 +69,22 @@ def index(request: Request):
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    if not file.filename.endswith((".nii", ".nii.gz")):
+    filename = file.filename or ""
+    if not filename.endswith((".nii", ".nii.gz")):
         raise HTTPException(400, "Chỉ nhận file .nii hoặc .nii.gz")
 
-    data = await file.read()
-    suffix = ".nii.gz" if file.filename.endswith(".gz") else ".nii"
+    # Đọc theo khối và chặn sớm nếu vượt giới hạn (tránh nạp cả file quá lớn vào RAM).
+    suffix = ".nii.gz" if filename.endswith(".gz") else ".nii"
+    total = 0
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(data)
         tmp_path = tmp.name
+        while chunk := await file.read(1024 * 1024):
+            total += len(chunk)
+            if total > MAX_UPLOAD_BYTES:
+                tmp.close()
+                os.unlink(tmp_path)
+                raise HTTPException(413, "File quá lớn.")
+            tmp.write(chunk)
     try:
         result = get_engine().predict(tmp_path)
     except HTTPException:

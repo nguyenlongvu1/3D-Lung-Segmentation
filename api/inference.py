@@ -39,7 +39,7 @@ class LungTumorInference:
         self.cfg = cfg or load_config()
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = build_model(self.cfg).to(self.device)
-        self.model.load_state_dict(torch.load(ckpt_path, map_location=self.device))
+        self.model.load_state_dict(torch.load(ckpt_path, map_location=self.device, weights_only=True))
         self.model.eval()
         self.tf = get_infer_transforms(self.cfg)
         self.voxel_mm3 = float(np.prod(self.cfg.data.spacing))
