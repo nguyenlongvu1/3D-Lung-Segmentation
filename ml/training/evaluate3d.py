@@ -11,12 +11,18 @@ import os
 import time
 
 import torch
-from monai.inferers import sliding_window_inference
 
 from ml.config import load_config
 from ml.data.datamodule import get_test_loader
-from ml.models.factory import build_model, count_parameters
+from ml.models.factory import count_parameters
 from ml.training.metrics3d import SegMetrics
+from ml.utils import (
+    amp_enabled,
+    get_device,
+    load_trained_model,
+    require_checkpoint,
+    sliding_window_predict,
+)
 
 
 def _append_csv(path, row):
@@ -32,31 +38,24 @@ def _append_csv(path, row):
 
 @torch.no_grad()
 def evaluate(cfg):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    amp = bool(cfg.train.amp) and device.type == "cuda"
+    device = get_device()
+    amp = amp_enabled(cfg, device)
 
     # Nạp checkpoint best của kiến trúc đang chọn
-    ckpt = os.path.join(cfg.train.ckpt_dir, f"best_{cfg.model.name}.pth")
-    if not os.path.exists(ckpt):
-        raise FileNotFoundError(f"Chưa có checkpoint: {ckpt}. Hãy train trước (train3d).")
-    model = build_model(cfg).to(device)
-    model.load_state_dict(torch.load(ckpt, map_location=device))
-    model.eval()
+    ckpt = require_checkpoint(cfg)
+    model = load_trained_model(cfg, ckpt, device)
 
     test_loader = get_test_loader(cfg)
     metrics = SegMetrics(num_classes=cfg.model.out_channels)
     metrics.reset()
 
-    roi = tuple(cfg.data.roi_size)
     infer_times = []
     for batch in test_loader:
         images = batch["image"].to(device)
         labels = batch["label"].to(device)
         t0 = time.time()
         with torch.amp.autocast("cuda", enabled=amp):
-            outputs = sliding_window_inference(
-                images, roi, cfg.train.sw_batch_size, model, overlap=cfg.train.sw_overlap
-            )
+            outputs = sliding_window_predict(model, images, cfg)
         if device.type == "cuda":
             torch.cuda.synchronize()
         infer_times.append(time.time() - t0)

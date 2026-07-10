@@ -18,7 +18,6 @@ from torch.amp import autocast, GradScaler
 from tqdm import tqdm
 
 from monai.losses import DiceCELoss, DiceFocalLoss, TverskyLoss
-from monai.inferers import sliding_window_inference
 from monai.optimizers import WarmupCosineSchedule
 from monai.utils import set_determinism
 
@@ -26,6 +25,7 @@ from ml.config import load_config, save_config
 from ml.data.datamodule import get_loaders
 from ml.models.factory import build_model, count_parameters
 from ml.training.metrics3d import SegMetrics
+from ml.utils import amp_enabled, get_device, sliding_window_predict
 
 
 def build_loss(name: str):
@@ -46,22 +46,19 @@ def validate(model, val_loader, metrics, cfg, device, amp):
     """Chạy validation trên nguyên volume bằng sliding-window inference."""
     model.eval()
     metrics.reset()
-    roi = tuple(cfg.data.roi_size)
     for batch in val_loader:
         images = batch["image"].to(device)
         labels = batch["label"].to(device)
         with autocast("cuda", enabled=amp):
-            outputs = sliding_window_inference(
-                images, roi, cfg.train.sw_batch_size, model, overlap=cfg.train.sw_overlap
-            )
+            outputs = sliding_window_predict(model, images, cfg)
         metrics.update(outputs, labels)
     return metrics.aggregate()
 
 
 def train(cfg):
     set_determinism(seed=cfg.seed)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    amp = bool(cfg.train.amp) and device.type == "cuda"
+    device = get_device()
+    amp = amp_enabled(cfg, device)
     print(f"Device: {device} | Model: {cfg.model.name} | AMP: {amp}")
 
     train_loader, val_loader = get_loaders(cfg)  # tự chia train/val/test theo seed

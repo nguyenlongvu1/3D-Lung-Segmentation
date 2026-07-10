@@ -5,7 +5,6 @@ chạy sliding-window inference giống lúc validate để kết quả nhất q
 """
 import numpy as np
 import torch
-from monai.inferers import sliding_window_inference
 from monai.transforms import (
     Compose,
     LoadImage,
@@ -16,7 +15,7 @@ from monai.transforms import (
 )
 
 from ml.config import load_config
-from ml.models.factory import build_model
+from ml.utils import get_device, load_trained_model, sliding_window_predict
 
 
 def get_infer_transforms(cfg):
@@ -37,10 +36,8 @@ def get_infer_transforms(cfg):
 class LungTumorInference:
     def __init__(self, ckpt_path, cfg=None, device=None):
         self.cfg = cfg or load_config()
-        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = build_model(self.cfg).to(self.device)
-        self.model.load_state_dict(torch.load(ckpt_path, map_location=self.device))
-        self.model.eval()
+        self.device = get_device(device)
+        self.model = load_trained_model(self.cfg, ckpt_path, self.device)
         self.tf = get_infer_transforms(self.cfg)
         self.voxel_mm3 = float(np.prod(self.cfg.data.spacing))
 
@@ -48,10 +45,7 @@ class LungTumorInference:
     def predict(self, nifti_path):
         img = self.tf(nifti_path)                      # [1, H, W, D], giá trị [0,1]
         x = img.unsqueeze(0).to(self.device)           # [1, 1, H, W, D]
-        logits = sliding_window_inference(
-            x, tuple(self.cfg.data.roi_size), self.cfg.train.sw_batch_size,
-            self.model, overlap=self.cfg.train.sw_overlap,
-        )
+        logits = sliding_window_predict(self.model, x, self.cfg)
         mask = torch.argmax(logits, dim=1)[0].cpu().numpy().astype(np.uint8)  # [H, W, D]
         image = np.asarray(img[0].cpu())               # [H, W, D]
         tumor_ml = float(mask.sum()) * self.voxel_mm3 / 1000.0

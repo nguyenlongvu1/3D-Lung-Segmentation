@@ -17,6 +17,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image
 
+from ml.utils import best_foreground_slice
+
 app = FastAPI(title="Lung Tumor Segmentation 3D")
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -44,7 +46,7 @@ def get_engine():
 
 def _best_slice(mask, n):
     """Lát có nhiều khối u nhất (để hiển thị mặc định), hoặc lát giữa."""
-    return int(mask.sum(axis=(0, 1)).argmax()) if mask.sum() > 0 else n // 2
+    return best_foreground_slice(mask, axis=2)
 
 
 def _render_overlay(img2d, mask2d):
