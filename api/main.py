@@ -7,6 +7,7 @@ Luồng:
 Lưu ý: trạng thái lưu trong biến toàn cục (demo 1 người dùng), không dùng cho production.
 """
 import io
+import logging
 import os
 import tempfile
 
@@ -16,6 +17,8 @@ from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image
+
+logger = logging.getLogger("lung_seg.api")
 
 app = FastAPI(title="Lung Tumor Segmentation 3D")
 
@@ -66,7 +69,7 @@ def index(request: Request):
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    if not file.filename.endswith((".nii", ".nii.gz")):
+    if not file.filename or not file.filename.endswith((".nii", ".nii.gz")):
         raise HTTPException(400, "Chỉ nhận file .nii hoặc .nii.gz")
 
     data = await file.read()
@@ -78,10 +81,22 @@ async def predict(file: UploadFile = File(...)):
         result = get_engine().predict(tmp_path)
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001
+    except (ValueError, RuntimeError, OSError) as e:
+        # Lỗi do file đầu vào hỏng/không đọc được (NIfTI lỗi, shape sai...) -> lỗi client.
+        # Vẫn log đầy đủ để debug thay vì chỉ nuốt traceback.
+        logger.warning("Không đọc/xử lý được file '%s': %s", file.filename, e, exc_info=True)
         raise HTTPException(400, f"Không xử lý được file: {e}")
+    except Exception as e:  # noqa: BLE001
+        # Lỗi bất ngờ phía server (bug, hết bộ nhớ...) -> KHÔNG che thành 400.
+        # Ghi log traceback đầy đủ và trả 500 để lỗi thật được thấy, không bị nuốt.
+        logger.exception("Lỗi không mong đợi khi inference file '%s'", file.filename)
+        raise HTTPException(500, f"Lỗi máy chủ khi xử lý file: {e}")
     finally:
-        os.unlink(tmp_path)
+        try:
+            os.unlink(tmp_path)
+        except OSError as e:
+            # Dọn file tạm thất bại không nên che lấp kết quả/lỗi của request.
+            logger.warning("Không xóa được file tạm '%s': %s", tmp_path, e)
 
     _last["image"], _last["mask"] = result["image"], result["mask"]
     n = int(result["image"].shape[2])
