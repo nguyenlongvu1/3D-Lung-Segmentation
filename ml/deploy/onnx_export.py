@@ -19,7 +19,7 @@ import numpy as np
 import torch
 
 from ml.config import load_config
-from ml.models.factory import build_model
+from ml.utils import load_trained_model, require_checkpoint
 
 
 def export_to_onnx(model, roi, path, device):
@@ -79,16 +79,12 @@ def main():
 
     cfg = load_config(args.config)
     roi = tuple(cfg.data.roi_size)
-    ckpt = os.path.join(cfg.train.ckpt_dir, f"best_{cfg.model.name}.pth")
-    if not os.path.exists(ckpt):
-        raise FileNotFoundError(f"Chưa có checkpoint: {ckpt}. Hãy train trước (train3d).")
+    ckpt = require_checkpoint(cfg)
     onnx_path = os.path.join(cfg.train.ckpt_dir, f"{cfg.model.name}.onnx")
     cpu = torch.device("cpu")
 
     # --- Export & verify CÙNG trên CPU (để so sánh số học công bằng, loại nhiễu GPU↔CPU) ---
-    model_cpu = build_model(cfg)
-    model_cpu.load_state_dict(torch.load(ckpt, map_location="cpu"))
-    model_cpu.eval()
+    model_cpu = load_trained_model(cfg, ckpt, cpu)
     export_to_onnx(model_cpu, roi, onnx_path, cpu)
 
     import onnxruntime as ort
@@ -103,9 +99,7 @@ def main():
     results = {}
     with torch.no_grad():
         if torch.cuda.is_available():
-            model_gpu = build_model(cfg)
-            model_gpu.load_state_dict(torch.load(ckpt, map_location="cpu"))
-            model_gpu.to("cuda").eval()
+            model_gpu = load_trained_model(cfg, ckpt, torch.device("cuda"))
             x_gpu = x_cpu.to("cuda")
             results["PyTorch (CUDA)"] = _bench(
                 lambda: model_gpu(x_gpu), args.iters, args.warmup, cuda=True

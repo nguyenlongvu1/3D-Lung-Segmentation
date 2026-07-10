@@ -19,6 +19,7 @@ from monai.apps import DecathlonDataset
 
 from ml.config import load_config
 from ml.data.transforms import get_transforms
+from ml.utils import best_foreground_slice
 
 
 def _describe(name, t):
@@ -70,10 +71,8 @@ def main():
 
     # 3) Lưu ảnh overlay 1 lát cắt (chọn lát có nhiều nhãn nhất để thấy khối u)
     img_np, lbl_np = img[0].cpu().numpy(), lbl[0].cpu().numpy()
-    if lbl_np.sum() > 0:
-        z = int(lbl_np.sum(axis=(0, 1)).argmax())
-    else:
-        z = img_np.shape[2] // 2
+    z = best_foreground_slice(lbl_np, axis=2)
+    if lbl_np.sum() == 0:
         print("  (Lưu ý: volume này không có nhãn dương — lấy lát giữa)")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
