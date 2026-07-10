@@ -40,7 +40,7 @@ def evaluate(cfg):
     if not os.path.exists(ckpt):
         raise FileNotFoundError(f"Chưa có checkpoint: {ckpt}. Hãy train trước (train3d).")
     model = build_model(cfg).to(device)
-    model.load_state_dict(torch.load(ckpt, map_location=device))
+    model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
     model.eval()
 
     test_loader = get_test_loader(cfg)

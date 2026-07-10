@@ -87,7 +87,7 @@ def main():
 
     # --- Export & verify CÙNG trên CPU (để so sánh số học công bằng, loại nhiễu GPU↔CPU) ---
     model_cpu = build_model(cfg)
-    model_cpu.load_state_dict(torch.load(ckpt, map_location="cpu"))
+    model_cpu.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=True))
     model_cpu.eval()
     export_to_onnx(model_cpu, roi, onnx_path, cpu)
 
@@ -104,7 +104,7 @@ def main():
     with torch.no_grad():
         if torch.cuda.is_available():
             model_gpu = build_model(cfg)
-            model_gpu.load_state_dict(torch.load(ckpt, map_location="cpu"))
+            model_gpu.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=True))
             model_gpu.to("cuda").eval()
             x_gpu = x_cpu.to("cuda")
             results["PyTorch (CUDA)"] = _bench(
